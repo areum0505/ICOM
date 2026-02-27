@@ -1,0 +1,15 @@
+# 로그
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# 빌드 결과물 (루트 .gitignore와 중복이지만 프론트엔드 컨텍스트 명시)
+node_modules/
+dist/
+dist-ssr/
+
+# Vite 로컬 환경 변수 (루트 .gitignore의 *.local 패턴으로도 커버됨)
+.env.local
+.env.*.local

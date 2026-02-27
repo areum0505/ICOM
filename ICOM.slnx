@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/ICOM.Api/ICOM.Api.csproj" />
+  <Project Path="src/ICOM.Application/ICOM.Application.csproj" />
+  <Project Path="src/ICOM.Domain/ICOM.Domain.csproj" />
+  <Project Path="src/ICOM.Infrastructure/ICOM.Infrastructure.csproj" />
+</Solution>

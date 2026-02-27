@@ -1,0 +1,55 @@
+# ========================
+# .NET / ASP.NET Core
+# ========================
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.userprefs
+
+# 로컬 전용 설정 (실제 DB 연결 문자열, 비밀키 등)
+appsettings.Local.json
+appsettings.*.Local.json
+
+# 빌드 결과물
+publish/
+*.nupkg
+*.snupkg
+
+# Entity Framework
+migrations/*.sql
+
+# 테스트 결과물
+TestResults/
+coverage/
+
+# ========================
+# Node.js / Vue / Vite
+# ========================
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Vite 로컬 환경 변수 (비밀값은 .local 파일에)
+.env.local
+.env.*.local
+
+# VS Code (팀 공유 설정은 제외하지 않으려면 아래 줄 삭제)
+.vscode/
+
+# ========================
+# Claude Code
+# ========================
+.claude/
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db

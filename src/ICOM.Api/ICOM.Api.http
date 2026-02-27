@@ -1,0 +1,6 @@
+@ICOM.Api_HostAddress = http://localhost:5186
+
+GET {{ICOM.Api_HostAddress}}
+Accept: application/json
+
+###
