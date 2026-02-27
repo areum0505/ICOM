@@ -3,9 +3,10 @@ import api from './index'
 // 상품(Product) 관련 API 호출 함수 모음
 
 /**
- * 상품 목록 조회
+ * 상품 목록 조회 (필터 + 페이지네이션)
+ * @param {{ category?: string, search?: string, page?: number, pageSize?: number }} params
  */
-export const getProducts = () => api.get('/products')
+export const getProducts = (params) => api.get('/products', { params })
 
 /**
  * 상품 단건 조회

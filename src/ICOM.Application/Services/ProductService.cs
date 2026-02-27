@@ -16,11 +16,18 @@ public class ProductService : IProductService
         _repository = repository;
     }
 
-    /// <summary>전체 제품 목록 조회</summary>
-    public async Task<IEnumerable<ProductDto>> GetAllAsync()
+    /// <summary>카테고리·검색어 필터 + 페이지네이션 목록 조회</summary>
+    public async Task<PagedResultDto<ProductDto>> GetListAsync(
+        string? category, string? search, int page, int pageSize)
     {
-        var products = await _repository.GetAllAsync();
-        return products.Select(ToDto);
+        var (items, totalCount) = await _repository.GetListAsync(category, search, page, pageSize);
+        return new PagedResultDto<ProductDto>
+        {
+            Items = items.Select(ToDto),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
     }
 
     /// <summary>ID로 단일 제품 조회</summary>

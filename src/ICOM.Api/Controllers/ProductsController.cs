@@ -18,14 +18,17 @@ public class ProductsController : ControllerBase
         _productService = productService;
     }
 
-    /// <summary>전체 제품 목록 조회</summary>
-    /// <returns>UnitPrice, Margin 계산값이 포함된 제품 목록</returns>
+    /// <summary>제품 목록 조회 (카테고리·검색어 필터 + 페이지네이션)</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<ProductDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(PagedResultDto<ProductDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? category,
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var products = await _productService.GetAllAsync();
-        return Ok(products);
+        var result = await _productService.GetListAsync(category, search, page, pageSize);
+        return Ok(result);
     }
 
     /// <summary>ID로 단일 제품 조회</summary>

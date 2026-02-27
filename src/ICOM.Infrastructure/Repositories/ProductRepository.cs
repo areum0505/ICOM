@@ -17,10 +17,27 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    /// <summary>전체 제품 목록 조회</summary>
-    public async Task<IEnumerable<Product>> GetAllAsync()
+    /// <summary>카테고리·검색어 필터 + 페이지네이션 목록 조회</summary>
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> GetListAsync(
+        string? category, string? search, int page, int pageSize)
     {
-        return await _context.Products.AsNoTracking().ToListAsync();
+        var query = _context.Products.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(category))
+            query = query.Where(p => p.Category == category);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(p => p.Name.Contains(search));
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(p => p.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
     }
 
     /// <summary>ID로 단일 제품 조회</summary>

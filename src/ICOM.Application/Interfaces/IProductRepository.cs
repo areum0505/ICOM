@@ -7,8 +7,9 @@ namespace ICOM.Application.Interfaces;
 /// </summary>
 public interface IProductRepository
 {
-    /// <summary>전체 제품 목록 조회</summary>
-    Task<IEnumerable<Product>> GetAllAsync();
+    /// <summary>카테고리·검색어 필터 + 페이지네이션 목록 조회</summary>
+    Task<(IEnumerable<Product> Items, int TotalCount)> GetListAsync(
+        string? category, string? search, int page, int pageSize);
 
     /// <summary>ID로 단일 제품 조회</summary>
     Task<Product?> GetByIdAsync(int id);
