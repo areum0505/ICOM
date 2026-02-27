@@ -27,6 +27,7 @@
       :product-id="product.id"
       :initial-data="product"
       @success="onSuccess"
+      @delete="onSuccess"
       @cancel="router.back()"
     />
   </div>

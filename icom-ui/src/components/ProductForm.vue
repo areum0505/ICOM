@@ -152,21 +152,49 @@
     </section>
 
     <!-- 액션 버튼 -->
-    <div class="flex justify-end gap-3">
-      <button
-        type="button"
-        class="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        @click="$emit('cancel')"
-      >
-        취소
-      </button>
-      <button
-        type="submit"
-        :disabled="submitting"
-        class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {{ submitting ? '저장 중...' : isEditMode ? '수정 완료' : '상품 등록' }}
-      </button>
+    <div class="flex items-center justify-between">
+      <!-- 삭제 (수정 모드 전용) -->
+      <div v-if="isEditMode">
+        <template v-if="confirmingDelete">
+          <span class="text-sm text-gray-500 mr-2">정말 삭제할까요?</span>
+          <button
+            type="button"
+            :disabled="deleting"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mr-2"
+            @click="handleDelete"
+          >{{ deleting ? '삭제 중...' : '확인' }}</button>
+          <button
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            @click="confirmingDelete = false"
+          >취소</button>
+        </template>
+        <button
+          v-else
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-red-500 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+          @click="confirmingDelete = true"
+        >삭제</button>
+      </div>
+      <div v-else />
+
+      <!-- 취소 / 저장 -->
+      <div class="flex gap-3">
+        <button
+          type="button"
+          class="px-5 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          @click="$emit('cancel')"
+        >
+          취소
+        </button>
+        <button
+          type="submit"
+          :disabled="submitting"
+          class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {{ submitting ? '저장 중...' : isEditMode ? '수정' : '등록' }}
+        </button>
+      </div>
     </div>
 
   </form>
@@ -174,7 +202,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { createProduct, updateProduct } from '../api/products'
+import { createProduct, updateProduct, deleteProduct } from '../api/products'
 import { getDetailCodes } from '../api/codes'
 
 const props = defineProps({
@@ -184,7 +212,7 @@ const props = defineProps({
   initialData: { type: Object, default: null },
 })
 
-const emit = defineEmits(['success', 'cancel'])
+const emit = defineEmits(['success', 'cancel', 'delete'])
 
 const isEditMode = computed(() => props.productId !== null)
 
@@ -204,6 +232,8 @@ const categoriesLoading = ref(false)
 
 const errors = ref({})
 const submitting = ref(false)
+const confirmingDelete = ref(false)
+const deleting = ref(false)
 
 /** ProductCategory 상세 코드 로드 */
 onMounted(async () => {
@@ -265,6 +295,20 @@ async function handleSubmit() {
     errors.value._server = msg
   } finally {
     submitting.value = false
+  }
+}
+
+/** 상품 삭제 */
+async function handleDelete() {
+  deleting.value = true
+  try {
+    await deleteProduct(props.productId)
+    emit('delete')
+  } catch {
+    errors.value._server = '삭제에 실패했습니다.'
+    confirmingDelete.value = false
+  } finally {
+    deleting.value = false
   }
 }
 
