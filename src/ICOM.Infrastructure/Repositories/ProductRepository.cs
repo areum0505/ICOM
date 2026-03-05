@@ -21,7 +21,8 @@ public class ProductRepository : IProductRepository
     public async Task<(IEnumerable<Product> Items, int TotalCount)> GetListAsync(
         string? category, string? search, int page, int pageSize)
     {
-        var query = _context.Products.AsNoTracking();
+        var query = _context.Products.AsNoTracking()
+            .Where(p => p.DeleteDate == null);
 
         if (!string.IsNullOrWhiteSpace(category))
             query = query.Where(p => p.Category == category);
@@ -44,7 +45,7 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(int id)
     {
         return await _context.Products.AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeleteDate == null);
     }
 
     /// <summary>제품 생성</summary>
@@ -63,13 +64,13 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
-    /// <summary>제품 삭제 - 존재하지 않으면 false 반환</summary>
+    /// <summary>제품 소프트 삭제 - DeleteDate 설정</summary>
     public async Task<bool> DeleteAsync(int id)
     {
         var product = await _context.Products.FindAsync(id);
-        if (product is null) return false;
+        if (product is null || product.DeleteDate != null) return false;
 
-        _context.Products.Remove(product);
+        product.DeleteDate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
     }

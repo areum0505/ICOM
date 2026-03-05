@@ -31,4 +31,6 @@ public class Product
         : 0;
 
     public int StockQuantity { get; set; }      // 현재 재고 수량
+
+    public DateTime? DeleteDate { get; set; }   // 소프트 삭제 (null = 사용 중)
 }

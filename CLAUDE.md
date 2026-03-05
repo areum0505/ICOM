@@ -40,13 +40,13 @@ src/
 
 의존 방향: `Api → Infrastructure → Application → Domain`
 
-각 레이어에 `DependencyInjection.cs`가 있으며 `Program.cs`에서 `.AddApplicationServices()` / `.AddInfrastructureServices()`로 등록.
+각 레이어에 `DependencyInjection.cs`가 있으며 `Program.cs`에서 `.AddApplication()` / `.AddInfrastructure()`로 등록.
 
 ### 프론트엔드 — Vue 3 + Vite
 
 ```
 icom-ui/src/
-├── api/          # Axios 인스턴스(index.js), products.js, codes.js
+├── api/          # Axios 인스턴스(index.js), products.js, codes.js, orders.js
 ├── components/   # 재사용 컴포넌트
 ├── views/        # 라우트별 페이지
 └── router/       # Vue Router 4 설정
@@ -63,6 +63,13 @@ API base URL은 `icom-ui/.env.development`의 `VITE_API_BASE_URL`로 주입.
 - `UnitPrice = BoxPrice / PackageSize` (낱개 매입가)
 - `Margin = (RetailPrice - UnitPrice) / RetailPrice` (마진율)
 
+### 발주 데이터 스냅샷
+
+`OrderItem`은 발주 시점의 데이터를 스냅샷으로 저장한다. 이후 상품 정보가 변경되거나 삭제되어도 발주 내역은 원래 값을 유지한다.
+
+- `OrderItem.ProductName` — 발주 시점 상품명 (Product.Name 스냅샷)
+- `OrderItem.BoxPrice` — 발주 시점 매입단가 (Product.BoxPrice 스냅샷)
+
 ### 코드 테이블
 
 카테고리 등 Enum 대신 `GroupCode` / `DetailCode` 테이블로 범용 코드를 관리한다.
@@ -71,21 +78,59 @@ API base URL은 `icom-ui/.env.development`의 `VITE_API_BASE_URL`로 주입.
 
 ## API 엔드포인트
 
+### 상품
+
 | Method | Path | Query 파라미터 | 설명 |
 |--------|------|----------------|------|
-| GET | `/api/products` | `category`, `search`, `page`, `pageSize` | 상품 목록 |
+| GET | `/api/products` | `category`, `search`, `page`, `pageSize` | 상품 목록 (페이징) |
 | GET | `/api/products/{id}` | | 단건 조회 |
 | POST | `/api/products` | | 상품 등록 |
 | PUT | `/api/products/{id}` | | 상품 수정 |
 | DELETE | `/api/products/{id}` | | 상품 삭제 |
 | GET | `/api/codes/{groupCode}/details` | | 코드 목록 조회 |
 
+### 발주
+
+| Method | Path | Query 파라미터 | 설명 |
+|--------|------|----------------|------|
+| GET | `/api/orders` | `page`, `pageSize` | 발주 목록 (페이징, 내림차순) |
+| GET | `/api/orders/{id}` | | 발주 단건 조회 |
+| POST | `/api/orders` | | 발주 등록 |
+| DELETE | `/api/orders/{id}` | | 발주 삭제 |
+| GET | `/api/orders/{id}/items` | | 발주 품목 목록 |
+| POST | `/api/orders/{id}/items` | | 발주 품목 등록 |
+| PUT | `/api/orders/{id}/items/{itemId}` | | 발주 품목 수정 |
+| DELETE | `/api/orders/{id}/items/{itemId}` | | 발주 품목 삭제 |
+
 ## 데이터베이스
 
 - **LocalDB (SQL Server)**: `Server=(localdb)\mssqllocaldb;Database=ICOM_DB`
 - EF Core Code First; 마이그레이션은 `ICOM.Infrastructure/Migrations/`
 - 컬럼 타입 규칙: 금액 → `decimal(18,2)`, 코드값 → `varchar(ASCII)`, 명칭 → `nvarchar`
-- 소프트 삭제: `DeleteDate` nullable 컬럼으로 관리 (`IsUse = true`, `DeleteDate = null` 조건으로 조회)
+- 소프트 삭제: `DeleteDate` nullable 컬럼으로 관리. `Product`, `GroupCode`, `DetailCode`에 적용. 조회 시 항상 `DeleteDate == null` 필터 적용.
+
+### 테이블 구조 (주요)
+
+| 테이블 | 역할 | 비고 |
+|--------|------|------|
+| `Product` | 상품 | 소프트 삭제 (`DeleteDate`) |
+| `Order` | 발주 세션 헤더 | `OrderDate`, `CreateDate` |
+| `OrderItem` | 발주 품목 | `ProductName`/`BoxPrice` 스냅샷, Order 삭제 시 연쇄 삭제 |
+| `GroupCode` | 코드 그룹 | 소프트 삭제 |
+| `DetailCode` | 코드 상세 | 소프트 삭제 |
+
+## 프론트엔드 행 상태 관리
+
+`OrderDetailView`에서 테이블 행의 변경 상태를 `status` 단일 필드로 관리한다.
+
+| status | 의미 |
+|--------|------|
+| `'added'` | 하단 입력 영역에서 추가됨, 미저장 |
+| `'modified'` | DB에 있는 행, 수정됨 |
+| `'deleted'` | DB에 있는 행, 삭제 예약 |
+| `null` | DB에 있는 행, 변경 없음 |
+
+저장 버튼 클릭 시 상태별로 CREATE / UPDATE / DELETE API를 일괄 호출한다.
 
 ## 네이밍 규칙
 
@@ -122,7 +167,7 @@ API base URL은 `icom-ui/.env.development`의 `VITE_API_BASE_URL`로 주입.
 | 테이블명 | 단수 PascalCase | `Product`, `GroupCode`, `DetailCode` |
 | 컬럼명 | PascalCase | `BoxPrice`, `PackageSize` |
 | PK | `Id` | `int Id` |
-| FK (int) | 참조 엔티티명 + `Id` | `GroupCodeId` |
+| FK (int) | 참조 엔티티명 + `Id` | `OrderId`, `ProductId` |
 | FK (string 코드) | 참조 엔티티명 그대로 | `GroupCode` 컬럼 in `DetailCode` |
 
 ## 인증 설계 고려사항
@@ -141,7 +186,7 @@ API base URL은 `icom-ui/.env.development`의 `VITE_API_BASE_URL`로 주입.
 | Phase | 내용 |
 |-------|------|
 | 1 | 상품 CRUD + 단가/마진 관리 (완료) |
-| 2 | 아이스크림 발주 리스트 및 이미지(PNG) 내보내기 |
+| 2 | 발주 관리 — 목록/상세 2단계 구조, 품목 CRUD, 페이징 (완료) |
 | 3 | 과자/음료 엑셀/CSV 업로드 파이프라인 |
 | 4 | 통합 통계 대시보드 및 지출 리포트 |
 | 5 | 사용자 로그인 및 권한 관리 |

@@ -4,6 +4,7 @@ using ICOM.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ICOM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260305004907_AddOrderTable")]
+    partial class AddOrderTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -106,6 +109,9 @@ namespace ICOM.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("BoxPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -113,25 +119,6 @@ namespace ICOM.Infrastructure.Migrations
 
                     b.Property<DateOnly>("OrderDate")
                         .HasColumnType("date");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Order", (string)null);
-                });
-
-            modelBuilder.Entity("ICOM.Domain.Entities.OrderItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("BoxPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
@@ -141,11 +128,9 @@ namespace ICOM.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
-
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItem", (string)null);
+                    b.ToTable("Order", (string)null);
                 });
 
             modelBuilder.Entity("ICOM.Domain.Entities.Product", b =>
@@ -205,21 +190,13 @@ namespace ICOM.Infrastructure.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("ICOM.Domain.Entities.OrderItem", b =>
+            modelBuilder.Entity("ICOM.Domain.Entities.Order", b =>
                 {
-                    b.HasOne("ICOM.Domain.Entities.Order", "Order")
-                        .WithMany("Items")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ICOM.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Order");
 
                     b.Navigation("Product");
                 });
@@ -227,11 +204,6 @@ namespace ICOM.Infrastructure.Migrations
             modelBuilder.Entity("ICOM.Domain.Entities.GroupCode", b =>
                 {
                     b.Navigation("Details");
-                });
-
-            modelBuilder.Entity("ICOM.Domain.Entities.Order", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

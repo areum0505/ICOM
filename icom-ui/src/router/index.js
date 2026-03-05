@@ -33,7 +33,19 @@ const routes = [
     path: '/orders',
     name: 'OrderList',
     component: () => import('../views/OrderListView.vue'),
-    meta: { title: '발주 목록' },
+    meta: { title: '발주 관리' },
+  },
+  {
+    path: '/orders/new',
+    name: 'OrderCreate',
+    component: () => import('../views/OrderDetailView.vue'),
+    meta: { title: '발주 등록' },
+  },
+  {
+    path: '/orders/:id',
+    name: 'OrderDetail',
+    component: () => import('../views/OrderDetailView.vue'),
+    meta: { title: '발주 상세' },
   },
   {
     path: '/:pathMatch(.*)*',
